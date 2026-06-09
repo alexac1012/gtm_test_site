@@ -1,50 +1,87 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>GTM Test Form</title>
+<meta charset="UTF-8">
+<title>CAPI Lead Form</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #ffffff;
+    margin: 40px;
+}
+
+h1 {
+    color: #DFC5FE;
+    font-size: 42px;
+    margin-bottom: 30px;
+}
+
+form {
+    max-width: 500px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #DFC5FE;
+    color: #333;
+    border: none;
+    padding: 14px 24px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: .9;
+}
+</style>
 </head>
 
-<h1>GTM Test Form</h1>
+<body>
+
+<h1>Complete Your CAPI Lead Form</h1>
 
 <form id="test-form">
 
-  <p>
-    <label>First Name</label><br>
+    <label for="first_name">First Name</label>
     <input type="text" id="first_name" required>
-  </p>
 
-  <p>
-    <label>Last Name</label><br>
+    <label for="last_name">Last Name</label>
     <input type="text" id="last_name" required>
-  </p>
 
-  <p>
-    <label>li_fat_id</label><br>
+    <label for="li_fat_id">li_fat_id</label>
     <input type="text" id="li_fat_id">
-  </p>
 
-  <p>
-    <label>Email Address</label><br>
+    <label for="email">Email Address</label>
     <input type="email" id="email" required>
-  </p>
 
-  <p>
-    <label>Job Title</label><br>
+    <label for="job_title">Job Title</label>
     <input type="text" id="job_title">
-  </p>
 
-  <p>
-    <label>Company</label><br>
+    <label for="company">Company</label>
     <input type="text" id="company">
-  </p>
 
-  <p>
-    <label>2-Digit Country Code</label><br>
+    <label for="country_code">2-Digit Country Code</label>
     <input type="text" id="country_code" maxlength="2" placeholder="US">
-  </p>
 
-  <button type="submit">Submit</button>
+    <button type="submit">Submit</button>
 
 </form>
 
@@ -52,47 +89,48 @@
 window.dataLayer = window.dataLayer || [];
 
 async function sha256(value) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(value.trim().toLowerCase());
+    const encoder = new TextEncoder();
+    const data = encoder.encode(value.trim().toLowerCase());
 
-  const hashBuffer = await crypto.subtle.digest(
-    'SHA-256',
-    data
-  );
+    const hashBuffer = await crypto.subtle.digest(
+        'SHA-256',
+        data
+    );
 
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 }
 
 document.getElementById('test-form').addEventListener('submit', async function(e) {
 
-  e.preventDefault();
+    e.preventDefault();
 
-  const email = document.getElementById('email').value;
-  const hashedEmail = await sha256(email);
+    const email = document.getElementById('email').value;
+    const hashedEmail = await sha256(email);
 
-  dataLayer.push({
-    event: 'form_submit',
+    dataLayer.push({
+        event: 'form_submit',
 
-    first_name: document.getElementById('first_name').value,
-    last_name: document.getElementById('last_name').value,
-    li_fat_id: document.getElementById('li_fat_id').value,
-    email: email,
-    hashed_email: hashedEmail,
-    job_title: document.getElementById('job_title').value,
-    company: document.getElementById('company').value,
-    country_code: document.getElementById('country_code').value.toUpperCase()
-  });
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        li_fat_id: document.getElementById('li_fat_id').value,
+        email: email,
+        hashed_email: hashedEmail,
+        job_title: document.getElementById('job_title').value,
+        company: document.getElementById('company').value,
+        country_code: document.getElementById('country_code').value.toUpperCase()
+    });
 
-  console.log(
-    'Latest dataLayer event:',
-    dataLayer[dataLayer.length - 1]
-  );
+    console.log(
+        'Latest dataLayer event:',
+        dataLayer[dataLayer.length - 1]
+    );
 
-  alert('Form submitted. Check the console.');
+    alert('Form submitted. Check the console.');
 });
 </script>
 
 </body>
 </html>
+```
