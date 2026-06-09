@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GTM Test Site</title>
+</head>
+<body>
+
+<h1>GTM Form Test</h1>
+
+<form id="test-form">
+  <p>
+    <label>First Name</label><br>
+    <input name="first_name">
+  </p>
+
+  <p>
+    <label>Email</label><br>
+    <input name="email">
+  </p>
+
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+window.dataLayer = window.dataLayer || [];
+
+document.getElementById('test-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  dataLayer.push({
+    event: 'form_submit',
+    first_name: this.first_name.value,
+    email: this.email.value
+  });
+
+  console.log('Data Layer:', dataLayer);
+  alert('Form submitted');
+});
+</script>
+
+</body>
+</html>
