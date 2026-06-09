@@ -18,12 +18,10 @@ body {
     color: #4B0082;
 }
 
-/* FORM WRAPPER */
 .container {
     text-align: center;
 }
 
-/* HEADER */
 h1 {
     color: #4B0082;
     font-weight: bold;
@@ -31,7 +29,6 @@ h1 {
     font-family: Arial, sans-serif;
 }
 
-/* OUTER FORM BOX */
 .form-container {
     border: 4px solid #4B0082;
     border-radius: 12px;
@@ -41,7 +38,6 @@ h1 {
     text-align: left;
 }
 
-/* LABELS */
 label {
     display: block;
     font-weight: bold;
@@ -50,7 +46,6 @@ label {
     font-family: Arial, sans-serif;
 }
 
-/* INPUTS */
 input {
     width: 100%;
     padding: 12px;
@@ -62,7 +57,6 @@ input {
     box-sizing: border-box;
 }
 
-/* BUTTON */
 button {
     width: 100%;
     padding: 14px;
@@ -143,7 +137,7 @@ async function sha256(value) {
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
 
     return Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
+        .map(b => b.toString(16).padStart(2, 2))
         .join('');
 }
 
@@ -161,8 +155,10 @@ document.getElementById('test-form')
         first_name: document.getElementById('first_name').value,
         last_name: document.getElementById('last_name').value,
         li_fat_id: document.getElementById('li_fat_id').value,
-        email: email,
+
+        // ✅ ONLY HASHED EMAIL IS SENT
         hashed_email: hashedEmail,
+
         job_title: document.getElementById('job_title').value,
         company: document.getElementById('company').value,
         country_code: document.getElementById('country_code').value.toUpperCase()
@@ -173,7 +169,7 @@ document.getElementById('test-form')
         dataLayer[dataLayer.length - 1]
     );
 
-    // SWITCH TO THANK YOU PAGE
+    // show thank you page
     document.getElementById('form-page').style.display = 'none';
     document.getElementById('thankyou-page').style.display = 'flex';
     document.getElementById('thankyou-page').style.justifyContent = 'center';
