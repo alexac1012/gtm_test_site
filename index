@@ -1,40 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GTM Test Site</title>
+  <meta charset="UTF-8">
+  <title>GTM Test Form</title>
 </head>
 <body>
 
-<h1>GTM Form Test</h1>
+<h1>GTM Test Form</h1>
 
 <form id="test-form">
+
   <p>
     <label>First Name</label><br>
-    <input name="first_name">
+    <input type="text" id="first_name" required>
   </p>
 
   <p>
-    <label>Email</label><br>
-    <input name="email">
+    <label>Last Name</label><br>
+    <input type="text" id="last_name" required>
+  </p>
+
+  <p>
+    <label>li_fat_id</label><br>
+    <input type="text" id="li_fat_id">
+  </p>
+
+  <p>
+    <label>Email Address</label><br>
+    <input type="email" id="email" required>
+  </p>
+
+  <p>
+    <label>Job Title</label><br>
+    <input type="text" id="job_title">
+  </p>
+
+  <p>
+    <label>Company</label><br>
+    <input type="text" id="company">
+  </p>
+
+  <p>
+    <label>2-Digit Country Code</label><br>
+    <input type="text" id="country_code" maxlength="2" placeholder="US">
   </p>
 
   <button type="submit">Submit</button>
+
 </form>
 
 <script>
 window.dataLayer = window.dataLayer || [];
 
-document.getElementById('test-form').addEventListener('submit', function(e) {
+async function sha256(value) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(value.trim().toLowerCase());
+
+  const hashBuffer = await crypto.subtle.digest(
+    'SHA-256',
+    data
+  );
+
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+document.getElementById('test-form').addEventListener('submit', async function(e) {
+
   e.preventDefault();
+
+  const email = document.getElementById('email').value;
+  const hashedEmail = await sha256(email);
 
   dataLayer.push({
     event: 'form_submit',
-    first_name: this.first_name.value,
-    email: this.email.value
+
+    first_name: document.getElementById('first_name').value,
+    last_name: document.getElementById('last_name').value,
+    li_fat_id: document.getElementById('li_fat_id').value,
+    email: email,
+    hashed_email: hashedEmail,
+    job_title: document.getElementById('job_title').value,
+    company: document.getElementById('company').value,
+    country_code: document.getElementById('country_code').value.toUpperCase()
   });
 
-  console.log('Data Layer:', dataLayer);
-  alert('Form submitted');
+  console.log(
+    'Latest dataLayer event:',
+    dataLayer[dataLayer.length - 1]
+  );
+
+  alert('Form submitted. Check the console.');
 });
 </script>
 
