@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <title>CAPI Lead Form</title>
 
+<!-- Google Tag Manager -->
+<script>
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-N2PCMDJZ');
+</script>
+<!-- End Google Tag Manager -->
+
 <style>
 body {
     font-family: Arial, sans-serif;
@@ -74,7 +84,6 @@ button:hover {
     opacity: 0.9;
 }
 
-/* THANK YOU PAGE */
 .thankyou {
     font-family: "Brush Script MT", cursive;
     font-size: 64px;
@@ -85,6 +94,13 @@ button:hover {
 </head>
 
 <body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript>
+<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
+height="0" width="0" style="display:none;visibility:hidden"></iframe>
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
 
 <div class="container" id="form-page">
 
@@ -156,7 +172,6 @@ document.getElementById('test-form')
         last_name: document.getElementById('last_name').value,
         li_fat_id: document.getElementById('li_fat_id').value,
 
-        // ✅ ONLY HASHED EMAIL IS SENT
         hashed_email: hashedEmail,
 
         job_title: document.getElementById('job_title').value,
@@ -169,7 +184,6 @@ document.getElementById('test-form')
         dataLayer[dataLayer.length - 1]
     );
 
-    // show thank you page
     document.getElementById('form-page').style.display = 'none';
     document.getElementById('thankyou-page').style.display = 'flex';
     document.getElementById('thankyou-page').style.justifyContent = 'center';
