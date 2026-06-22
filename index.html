@@ -4,14 +4,16 @@
 <meta charset="UTF-8">
 <title>CAPI Lead Form</title>
 
+<!-- Ensure dataLayer exists BEFORE GTM loads -->
+<script>
+window.dataLayer = window.dataLayer || [];
+</script>
+
 <!-- Google Tag Manager -->
 <script>
 (function(w,d,s,l,i){
     w[l]=w[l]||[];
-    w[l].push({
-        'gtm.start': new Date().getTime(),
-        event:'gtm.js'
-    });
+    w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
 
     var f=d.getElementsByTagName(s)[0],
         j=d.createElement(s),
@@ -19,8 +21,12 @@
 
     j.async=true;
     j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-    f.parentNode.insertBefore(j,f);
 
+    j.onerror = function () {
+        console.warn("GTM failed to load");
+    };
+
+    f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-N2PCMDJZ');
 </script>
 <!-- End Google Tag Manager -->
@@ -101,14 +107,10 @@ button:hover {
 
 <!-- GTM NoScript -->
 <noscript>
-<iframe
-    src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
-    height="0"
-    width="0"
-    style="display:none;visibility:hidden">
-</iframe>
+<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
+height="0" width="0"
+style="display:none;visibility:hidden"></iframe>
 </noscript>
-<!-- End GTM NoScript -->
 
 <div class="container" id="form-page">
 
@@ -118,27 +120,23 @@ button:hover {
 
         <form id="test-form">
 
-            <label for="first_name">First Name</label>
+            <label>First Name</label>
             <input type="text" id="first_name" required>
 
-            <label for="last_name">Last Name</label>
+            <label>Last Name</label>
             <input type="text" id="last_name" required>
 
-            <label for="email">Email Address</label>
+            <label>Email Address</label>
             <input type="email" id="email" required>
 
-            <label for="job_title">Job Title</label>
+            <label>Job Title</label>
             <input type="text" id="job_title">
 
-            <label for="company">Company</label>
+            <label>Company</label>
             <input type="text" id="company">
 
-            <label for="country_code">2-Digit Country Code</label>
-            <input
-                type="text"
-                id="country_code"
-                maxlength="2"
-                placeholder="US">
+            <label>2-Digit Country Code</label>
+            <input type="text" id="country_code" maxlength="2" placeholder="US">
 
             <button type="submit">Submit</button>
 
@@ -155,249 +153,97 @@ button:hover {
 <script>
 window.dataLayer = window.dataLayer || [];
 
-/* ------------------------------------
-   Store li_fat_id globally
------------------------------------- */
 let liFatId = '';
 
-/* ------------------------------------
-   SHA256 Email Hashing
------------------------------------- */
-async function sha256(value) {
-
-    const encoder = new TextEncoder();
-
-    const data = encoder.encode(
-        value.trim().toLowerCase()
-    );
-
-    const hashBuffer = await crypto.subtle.digest(
+function sha256(value) {
+    return crypto.subtle.digest(
         'SHA-256',
-        data
+        new TextEncoder().encode(value.trim().toLowerCase())
+    ).then(buffer =>
+        Array.from(new Uint8Array(buffer))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('')
     );
-
-    return Array.from(
-        new Uint8Array(hashBuffer)
-    )
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
 }
 
-/* ------------------------------------
-   Event ID Generator
------------------------------------- */
 function generateEventId() {
-
-    if (
-        window.crypto &&
-        window.crypto.randomUUID
-    ) {
-        return window.crypto.randomUUID();
-    }
-
-    return (
-        Date.now().toString(36) +
-        Math.random()
-            .toString(36)
-            .substring(2, 15)
-    );
+    return (crypto.randomUUID && crypto.randomUUID())
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-/* ------------------------------------
-   URL Parameter Helper
------------------------------------- */
 function getLiFatId() {
-
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
-    for (const [key, value] of params.entries()) {
-
-        if (
-            key.toLowerCase() ===
-            'li_fat_id'
-        ) {
-            return value;
-        }
-    }
-
-    return '';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('li_fat_id') || '';
 }
 
-/* ------------------------------------
-   Page View Event
------------------------------------- */
-document.addEventListener(
-    'DOMContentLoaded',
-    function() {
+/* PAGE VIEW */
+document.addEventListener('DOMContentLoaded', function () {
 
+    try {
         liFatId = getLiFatId();
 
-        dataLayer.push({
-
+        window.dataLayer.push({
             event: 'page_view',
-
-            event_id:
-                generateEventId(),
-
-            page_location:
-                window.location.href,
-
-            page_path:
-                window.location.pathname,
-
-            page_title:
-                document.title,
-
-            li_fat_id:
-                liFatId
-
+            event_id: generateEventId(),
+            page_location: window.location.href,
+            page_path: window.location.pathname,
+            page_title: document.title,
+            li_fat_id: liFatId || null
         });
 
-        console.log(
-            'Page View Event:',
-            dataLayer[
-                dataLayer.length - 1
-            ]
-        );
+        console.log("Page View fired", window.dataLayer.at(-1));
 
+    } catch (err) {
+        console.error("Page view error", err);
     }
-);
+});
 
-/* ------------------------------------
-   Lead Event
------------------------------------- */
-document.getElementById(
-    'test-form'
-).addEventListener(
-    'submit',
-    async function(e) {
+/* LEAD FORM */
+document.getElementById('test-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-        e.preventDefault();
+    try {
+        const firstName = document.getElementById('first_name').value.trim();
+        const lastName = document.getElementById('last_name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const company = document.getElementById('company').value.trim();
+        const jobTitle = document.getElementById('job_title').value.trim();
+        const country = document.getElementById('country_code').value.trim().toUpperCase();
 
-        const firstName =
-            document.getElementById(
-                'first_name'
-            )
-            .value
-            .trim();
+        const hashedEmail = await sha256(email);
 
-        const lastName =
-            document.getElementById(
-                'last_name'
-            )
-            .value
-            .trim();
-
-        const email =
-            document.getElementById(
-                'email'
-            )
-            .value
-            .trim();
-
-        const company =
-            document.getElementById(
-                'company'
-            )
-            .value
-            .trim();
-
-        const jobTitle =
-            document.getElementById(
-                'job_title'
-            )
-            .value
-            .trim();
-
-        const country =
-            document.getElementById(
-                'country_code'
-            )
-            .value
-            .trim()
-            .toUpperCase();
-
-        const hashedEmail =
-            await sha256(email);
-
-        dataLayer.push({
-
+        window.dataLayer.push({
             event: 'generate_lead',
-
-            event_id:
-                generateEventId(),
-
-            form_name:
-                'event_registration',
-
+            event_id: generateEventId(),
+            form_name: 'event_registration',
             user_data: {
-
-                email:
-                    hashedEmail,
-
+                email: hashedEmail,
                 address: {
-
-                    first_name:
-                        firstName,
-
-                    last_name:
-                        lastName,
-
-                    country:
-                        country
-
+                    first_name: firstName,
+                    last_name: lastName,
+                    country: country || null
                 }
-
             },
-
-            company:
-                company,
-
-            job_title:
-                jobTitle,
-
-            li_fat_id:
-                liFatId
-
+            company,
+            job_title: jobTitle,
+            li_fat_id: liFatId || null
         });
 
-        console.log(
-            'Lead Event:',
-            dataLayer[
-                dataLayer.length - 1
-            ]
-        );
+        console.log("Lead fired", window.dataLayer.at(-1));
 
-        document.getElementById(
-            'form-page'
-        ).style.display =
-            'none';
+        document.getElementById('form-page').style.display = 'none';
 
-        document.getElementById(
-            'thankyou-page'
-        ).style.display =
-            'flex';
+        const thankYou = document.getElementById('thankyou-page');
+        thankYou.style.display = 'flex';
+        thankYou.style.justifyContent = 'center';
+        thankYou.style.alignItems = 'center';
+        thankYou.style.height = '100vh';
 
-        document.getElementById(
-            'thankyou-page'
-        ).style.justifyContent =
-            'center';
-
-        document.getElementById(
-            'thankyou-page'
-        ).style.alignItems =
-            'center';
-
-        document.getElementById(
-            'thankyou-page'
-        ).style.height =
-            '100vh';
-
+    } catch (err) {
+        console.error("Form submit error", err);
     }
-);
+});
 </script>
 
 </body>
