@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,21 +14,26 @@ window.dataLayer = window.dataLayer || [];
 <script>
 (function(w,d,s,l,i){
     w[l]=w[l]||[];
-    w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'});
 
-    var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),
-        dl=l!='dataLayer'?'&l='+l:'';
+    w[l].push({
+        'gtm.start': new Date().getTime(),
+        event: 'gtm.js'
+    });
 
-    j.async=true;
-    j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+    var f = d.getElementsByTagName(s)[0],
+        j = d.createElement(s),
+        dl = l != 'dataLayer' ? '&l=' + l : '';
+
+    j.async = true;
+    j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
 
     j.onerror = function () {
-        console.warn("GTM failed to load");
+        console.warn('GTM failed to load');
     };
 
-    f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-N2PCMDJZ');
+    f.parentNode.insertBefore(j, f);
+
+})(window, document, 'script', 'dataLayer', 'GTM-N2PCMDJZ');
 </script>
 <!-- End Google Tag Manager -->
 
@@ -107,10 +113,14 @@ button:hover {
 
 <!-- GTM NoScript -->
 <noscript>
-<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
-height="0" width="0"
-style="display:none;visibility:hidden"></iframe>
+<iframe
+    src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
+    height="0"
+    width="0"
+    style="display:none;visibility:hidden">
+</iframe>
 </noscript>
+<!-- End GTM NoScript -->
 
 <div class="container" id="form-page">
 
@@ -136,7 +146,11 @@ style="display:none;visibility:hidden"></iframe>
             <input type="text" id="company">
 
             <label>2-Digit Country Code</label>
-            <input type="text" id="country_code" maxlength="2" placeholder="US">
+            <input
+                type="text"
+                id="country_code"
+                maxlength="2"
+                placeholder="US">
 
             <button type="submit">Submit</button>
 
@@ -153,98 +167,150 @@ style="display:none;visibility:hidden"></iframe>
 <script>
 window.dataLayer = window.dataLayer || [];
 
-let liFatId = '';
+/* Capture LinkedIn Click ID from URL */
+const liFatId =
+    new URLSearchParams(window.location.search)
+        .get('li_fat_id') || null;
 
-function sha256(value) {
-    return crypto.subtle.digest(
-        'SHA-256',
-        new TextEncoder().encode(value.trim().toLowerCase())
-    ).then(buffer =>
-        Array.from(new Uint8Array(buffer))
-            .map(b => b.toString(16).padStart(2, '0'))
-            .join('')
-    );
+/* SHA256 helper for email only */
+async function sha256(value) {
+
+    const normalized =
+        value.trim().toLowerCase();
+
+    const buffer =
+        await crypto.subtle.digest(
+            'SHA-256',
+            new TextEncoder().encode(normalized)
+        );
+
+    return Array.from(new Uint8Array(buffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 }
 
+/* Generate event_id for deduplication */
 function generateEventId() {
-    return (crypto.randomUUID && crypto.randomUUID())
-        ? crypto.randomUUID()
-        : Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
 
-function getLiFatId() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('li_fat_id') || '';
+    if (crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+
+    return (
+        Date.now().toString(36) +
+        Math.random().toString(36).slice(2)
+    );
 }
 
 /* PAGE VIEW */
 document.addEventListener('DOMContentLoaded', function () {
 
-    try {
-        liFatId = getLiFatId();
+    const eventPayload = {
+        event: 'page_view',
+        event_id: generateEventId(),
+        page_location: window.location.href,
+        page_path: window.location.pathname,
+        page_title: document.title,
+        li_fat_id: liFatId
+    };
 
-        window.dataLayer.push({
-            event: 'page_view',
-            event_id: generateEventId(),
-            page_location: window.location.href,
-            page_path: window.location.pathname,
-            page_title: document.title,
-            li_fat_id: liFatId || null
-        });
+    window.dataLayer.push(eventPayload);
 
-        console.log("Page View fired", window.dataLayer.at(-1));
-
-    } catch (err) {
-        console.error("Page view error", err);
-    }
+    console.log('Page View fired');
+    console.log(eventPayload);
+    console.table(window.dataLayer);
 });
 
 /* LEAD FORM */
-document.getElementById('test-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
+document
+    .getElementById('test-form')
+    .addEventListener('submit', async function (e) {
 
-    try {
-        const firstName = document.getElementById('first_name').value.trim();
-        const lastName = document.getElementById('last_name').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const company = document.getElementById('company').value.trim();
-        const jobTitle = document.getElementById('job_title').value.trim();
-        const country = document.getElementById('country_code').value.trim().toUpperCase();
+        e.preventDefault();
 
-        const hashedEmail = await sha256(email);
+        try {
 
-        window.dataLayer.push({
-            event: 'generate_lead',
-            event_id: generateEventId(),
-            form_name: 'event_registration',
-            user_data: {
-                email: hashedEmail,
-                address: {
-                    first_name: firstName,
-                    last_name: lastName,
-                    country: country || null
-                }
-            },
-            company,
-            job_title: jobTitle,
-            li_fat_id: liFatId || null
-        });
+            const firstName =
+                document.getElementById('first_name')
+                    .value.trim();
 
-        console.log("Lead fired", window.dataLayer.at(-1));
+            const lastName =
+                document.getElementById('last_name')
+                    .value.trim();
 
-        document.getElementById('form-page').style.display = 'none';
+            const email =
+                document.getElementById('email')
+                    .value.trim();
 
-        const thankYou = document.getElementById('thankyou-page');
-        thankYou.style.display = 'flex';
-        thankYou.style.justifyContent = 'center';
-        thankYou.style.alignItems = 'center';
-        thankYou.style.height = '100vh';
+            const jobTitle =
+                document.getElementById('job_title')
+                    .value.trim();
 
-    } catch (err) {
-        console.error("Form submit error", err);
-    }
-});
+            const company =
+                document.getElementById('company')
+                    .value.trim();
+
+            const country =
+                document.getElementById('country_code')
+                    .value
+                    .trim()
+                    .toUpperCase();
+
+            /* Only email is hashed */
+            const hashedEmail =
+                await sha256(email);
+
+            const eventPayload = {
+
+                event: 'generate_lead',
+
+                event_id: generateEventId(),
+
+                form_name: 'event_registration',
+
+                user_data: {
+
+                    email: hashedEmail,
+
+                    address: {
+                        first_name: firstName,
+                        last_name: lastName,
+                        country: country || null
+                    }
+                },
+
+                company: company || null,
+                job_title: jobTitle || null,
+
+                li_fat_id: liFatId
+            };
+
+            window.dataLayer.push(eventPayload);
+
+            console.log('Lead fired');
+            console.log(eventPayload);
+            console.table(window.dataLayer);
+
+            document.getElementById('form-page').style.display = 'none';
+
+            const thankYou =
+                document.getElementById('thankyou-page');
+
+            thankYou.style.display = 'flex';
+            thankYou.style.justifyContent = 'center';
+            thankYou.style.alignItems = 'center';
+            thankYou.style.height = '100vh';
+
+        } catch (err) {
+
+            console.error(
+                'Form submit error',
+                err
+            );
+        }
+    });
 </script>
 
 </body>
 </html>
+```
