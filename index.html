@@ -6,17 +6,21 @@
 
 <!-- Google Tag Manager -->
 <script>
-(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({
-  'gtm.start': new Date().getTime(),
-  event:'gtm.js'
-});
-var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),
-dl=l!='dataLayer'?'&l='+l:'';
+(function(w,d,s,l,i){
+    w[l]=w[l]||[];
+    w[l].push({
+        'gtm.start': new Date().getTime(),
+        event:'gtm.js'
+    });
 
-j.async=true;
-j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-f.parentNode.insertBefore(j,f);
+    var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),
+        dl=l!='dataLayer'?'&l='+l:'';
+
+    j.async=true;
+    j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+    f.parentNode.insertBefore(j,f);
+
 })(window,document,'script','dataLayer','GTM-N2PCMDJZ');
 </script>
 <!-- End Google Tag Manager -->
@@ -98,10 +102,10 @@ button:hover {
 <!-- GTM NoScript -->
 <noscript>
 <iframe
-src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
-height="0"
-width="0"
-style="display:none;visibility:hidden">
+    src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
+    height="0"
+    width="0"
+    style="display:none;visibility:hidden">
 </iframe>
 </noscript>
 <!-- End GTM NoScript -->
@@ -119,9 +123,6 @@ style="display:none;visibility:hidden">
 
             <label for="last_name">Last Name</label>
             <input type="text" id="last_name" required>
-
-            <label for="li_fat_id">li_fat_id</label>
-            <input type="text" id="li_fat_id">
 
             <label for="email">Email Address</label>
             <input type="email" id="email" required>
@@ -154,9 +155,14 @@ style="display:none;visibility:hidden">
 <script>
 window.dataLayer = window.dataLayer || [];
 
-/* -----------------------------
+/* ------------------------------------
+   Store li_fat_id globally
+------------------------------------ */
+let liFatId = '';
+
+/* ------------------------------------
    SHA256 Email Hashing
------------------------------ */
+------------------------------------ */
 async function sha256(value) {
 
     const encoder = new TextEncoder();
@@ -177,47 +183,64 @@ async function sha256(value) {
     .join('');
 }
 
-/* -----------------------------
+/* ------------------------------------
    Event ID Generator
------------------------------ */
+------------------------------------ */
 function generateEventId() {
 
-    if (crypto.randomUUID) {
-        return crypto.randomUUID();
+    if (
+        window.crypto &&
+        window.crypto.randomUUID
+    ) {
+        return window.crypto.randomUUID();
     }
 
     return (
         Date.now().toString(36) +
-        Math.random().toString(36).substring(2, 15)
+        Math.random()
+            .toString(36)
+            .substring(2, 15)
     );
 }
 
-/* -----------------------------
-   On Page Load
------------------------------ */
+/* ------------------------------------
+   URL Parameter Helper
+------------------------------------ */
+function getLiFatId() {
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    for (const [key, value] of params.entries()) {
+
+        if (
+            key.toLowerCase() ===
+            'li_fat_id'
+        ) {
+            return value;
+        }
+    }
+
+    return '';
+}
+
+/* ------------------------------------
+   Page View Event
+------------------------------------ */
 document.addEventListener(
     'DOMContentLoaded',
     function() {
 
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
-
-        const liFatId =
-            params.get('li_fat_id');
-
-        if (liFatId) {
-            document.getElementById(
-                'li_fat_id'
-            ).value = liFatId;
-        }
+        liFatId = getLiFatId();
 
         dataLayer.push({
 
             event: 'page_view',
 
-            event_id: generateEventId(),
+            event_id:
+                generateEventId(),
 
             page_location:
                 window.location.href,
@@ -229,21 +252,23 @@ document.addEventListener(
                 document.title,
 
             li_fat_id:
-                liFatId || ''
+                liFatId
 
         });
 
         console.log(
             'Page View Event:',
-            dataLayer[dataLayer.length - 1]
+            dataLayer[
+                dataLayer.length - 1
+            ]
         );
 
     }
 );
 
-/* -----------------------------
-   Form Submission
------------------------------ */
+/* ------------------------------------
+   Lead Event
+------------------------------------ */
 document.getElementById(
     'test-form'
 ).addEventListener(
@@ -255,32 +280,37 @@ document.getElementById(
         const firstName =
             document.getElementById(
                 'first_name'
-            ).value.trim();
+            )
+            .value
+            .trim();
 
         const lastName =
             document.getElementById(
                 'last_name'
-            ).value.trim();
+            )
+            .value
+            .trim();
 
         const email =
             document.getElementById(
                 'email'
-            ).value.trim();
+            )
+            .value
+            .trim();
 
         const company =
             document.getElementById(
                 'company'
-            ).value.trim();
+            )
+            .value
+            .trim();
 
         const jobTitle =
             document.getElementById(
                 'job_title'
-            ).value.trim();
-
-        const liFatId =
-            document.getElementById(
-                'li_fat_id'
-            ).value.trim();
+            )
+            .value
+            .trim();
 
         const country =
             document.getElementById(
@@ -300,17 +330,28 @@ document.getElementById(
             event_id:
                 generateEventId(),
 
-            email:
-                hashedEmail,
+            form_name:
+                'event_registration',
 
-            first_name:
-                firstName,
+            user_data: {
 
-            last_name:
-                lastName,
+                email:
+                    hashedEmail,
 
-            country:
-                country,
+                address: {
+
+                    first_name:
+                        firstName,
+
+                    last_name:
+                        lastName,
+
+                    country:
+                        country
+
+                }
+
+            },
 
             company:
                 company,
@@ -332,11 +373,13 @@ document.getElementById(
 
         document.getElementById(
             'form-page'
-        ).style.display = 'none';
+        ).style.display =
+            'none';
 
         document.getElementById(
             'thankyou-page'
-        ).style.display = 'flex';
+        ).style.display =
+            'flex';
 
         document.getElementById(
             'thankyou-page'
@@ -352,6 +395,7 @@ document.getElementById(
             'thankyou-page'
         ).style.height =
             '100vh';
+
     }
 );
 </script>
