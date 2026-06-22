@@ -97,7 +97,8 @@ button:hover {
 
 <!-- GTM NoScript -->
 <noscript>
-<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
+<iframe
+src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
 height="0"
 width="0"
 style="display:none;visibility:hidden">
@@ -132,10 +133,11 @@ style="display:none;visibility:hidden">
             <input type="text" id="company">
 
             <label for="country_code">2-Digit Country Code</label>
-            <input type="text"
-                   id="country_code"
-                   maxlength="2"
-                   placeholder="US">
+            <input
+                type="text"
+                id="country_code"
+                maxlength="2"
+                placeholder="US">
 
             <button type="submit">Submit</button>
 
@@ -152,7 +154,11 @@ style="display:none;visibility:hidden">
 <script>
 window.dataLayer = window.dataLayer || [];
 
+/* -----------------------------
+   SHA256 Email Hashing
+----------------------------- */
 async function sha256(value) {
+
     const encoder = new TextEncoder();
 
     const data = encoder.encode(
@@ -164,81 +170,191 @@ async function sha256(value) {
         data
     );
 
-    return Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+    return Array.from(
+        new Uint8Array(hashBuffer)
+    )
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
-document.getElementById('test-form')
-.addEventListener('submit', async function(e) {
+/* -----------------------------
+   Event ID Generator
+----------------------------- */
+function generateEventId() {
 
-    e.preventDefault();
+    if (crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
 
-    const firstName =
-        document.getElementById('first_name').value.trim();
+    return (
+        Date.now().toString(36) +
+        Math.random().toString(36).substring(2, 15)
+    );
+}
 
-    const lastName =
-        document.getElementById('last_name').value.trim();
+/* -----------------------------
+   On Page Load
+----------------------------- */
+document.addEventListener(
+    'DOMContentLoaded',
+    function() {
 
-    const email =
-        document.getElementById('email').value.trim();
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
 
-    const company =
-        document.getElementById('company').value.trim();
+        const liFatId =
+            params.get('li_fat_id');
 
-    const jobTitle =
-        document.getElementById('job_title').value.trim();
+        if (liFatId) {
+            document.getElementById(
+                'li_fat_id'
+            ).value = liFatId;
+        }
 
-    const liFatId =
-        document.getElementById('li_fat_id').value.trim();
+        dataLayer.push({
 
-    const country =
-        document.getElementById('country_code')
+            event: 'page_view',
+
+            event_id: generateEventId(),
+
+            page_location:
+                window.location.href,
+
+            page_path:
+                window.location.pathname,
+
+            page_title:
+                document.title,
+
+            li_fat_id:
+                liFatId || ''
+
+        });
+
+        console.log(
+            'Page View Event:',
+            dataLayer[dataLayer.length - 1]
+        );
+
+    }
+);
+
+/* -----------------------------
+   Form Submission
+----------------------------- */
+document.getElementById(
+    'test-form'
+).addEventListener(
+    'submit',
+    async function(e) {
+
+        e.preventDefault();
+
+        const firstName =
+            document.getElementById(
+                'first_name'
+            ).value.trim();
+
+        const lastName =
+            document.getElementById(
+                'last_name'
+            ).value.trim();
+
+        const email =
+            document.getElementById(
+                'email'
+            ).value.trim();
+
+        const company =
+            document.getElementById(
+                'company'
+            ).value.trim();
+
+        const jobTitle =
+            document.getElementById(
+                'job_title'
+            ).value.trim();
+
+        const liFatId =
+            document.getElementById(
+                'li_fat_id'
+            ).value.trim();
+
+        const country =
+            document.getElementById(
+                'country_code'
+            )
             .value
             .trim()
             .toUpperCase();
 
-    const hashedEmail = await sha256(email);
-    const hashedFirstName = await sha256(firstName);
-    const hashedLastName = await sha256(lastName);
+        const hashedEmail =
+            await sha256(email);
 
-    dataLayer.push({
+        dataLayer.push({
 
-        event: 'generate_lead',
+            event: 'generate_lead',
 
-        form_name: 'event_registration',
+            event_id:
+                generateEventId(),
 
-        user_data: {
-            email: hashedEmail,
+            email:
+                hashedEmail,
 
-            address: {
-                first_name: hashedFirstName,
-                last_name: hashedLastName,
-                country: country
-            }
-        },
+            first_name:
+                firstName,
 
-        company: company,
-        job_title: jobTitle,
-        li_fat_id: liFatId
+            last_name:
+                lastName,
 
-    });
+            country:
+                country,
 
-    console.log(
-        'Latest dataLayer event:',
-        dataLayer[dataLayer.length - 1]
-    );
+            company:
+                company,
 
-    document.getElementById('form-page').style.display = 'none';
+            job_title:
+                jobTitle,
 
-    document.getElementById('thankyou-page').style.display = 'flex';
-    document.getElementById('thankyou-page').style.justifyContent = 'center';
-    document.getElementById('thankyou-page').style.alignItems = 'center';
-    document.getElementById('thankyou-page').style.height = '100vh';
+            li_fat_id:
+                liFatId
 
-});
+        });
+
+        console.log(
+            'Lead Event:',
+            dataLayer[
+                dataLayer.length - 1
+            ]
+        );
+
+        document.getElementById(
+            'form-page'
+        ).style.display = 'none';
+
+        document.getElementById(
+            'thankyou-page'
+        ).style.display = 'flex';
+
+        document.getElementById(
+            'thankyou-page'
+        ).style.justifyContent =
+            'center';
+
+        document.getElementById(
+            'thankyou-page'
+        ).style.alignItems =
+            'center';
+
+        document.getElementById(
+            'thankyou-page'
+        ).style.height =
+            '100vh';
+    }
+);
 </script>
 
 </body>
 </html>
-```
