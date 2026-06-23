@@ -200,9 +200,8 @@ function generateEventId() {
         Math.random().toString(36).slice(2)
     );
 }
-
-/* PAGE VIEW */
-document.addEventListener('DOMContentLoaded', function () {
+    /* PAGE VIEW - wait until GTM fully loads */
+function firePageView() {
 
     const eventPayload = {
         event: 'page_view',
@@ -218,7 +217,21 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('Page View fired');
     console.log(eventPayload);
     console.log(window.dataLayer);
-});
+}
+
+(function waitForGTMLoad() {
+
+    const gtmLoaded = window.dataLayer.some(
+        item => item.event === 'gtm.load'
+    );
+
+    if (gtmLoaded) {
+        firePageView();
+    } else {
+        setTimeout(waitForGTMLoad, 50);
+    }
+
+})();
 
 /* LEAD FORM */
 document
@@ -289,8 +302,7 @@ document
             console.log('Lead fired');
             console.log(eventPayload);
             console.log(window.dataLayer);
-
-            document.getElementById('form-page').style.display = 'none';
+                        document.getElementById('form-page').style.display = 'none';
 
             const thankYou =
                 document.getElementById('thankyou-page');
