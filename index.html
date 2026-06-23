@@ -4,13 +4,32 @@
 <meta charset="UTF-8">
 <title>CAPI Lead Form</title>
 
-<!-- Ensure dataLayer exists BEFORE GTM loads -->
 <script>
 window.dataLayer = window.dataLayer || [];
-</script>
 
-<!-- Google Tag Manager -->
-<script>
+const liFatId =
+    new URLSearchParams(location.search).get('li_fat_id');
+
+function generateEventId() {
+    return crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function firePageView() {
+    dataLayer.push({
+        event: 'page_view',
+        event_id: generateEventId(),
+        page_location: location.href,
+        page_path: location.pathname,
+        page_title: document.title,
+        li_fat_id: liFatId || null
+    });
+
+    console.log('Page View fired');
+    console.log(dataLayer);
+}
+
 (function(w,d,s,l,i){
     w[l]=w[l]||[];
 
@@ -19,12 +38,13 @@ window.dataLayer = window.dataLayer || [];
         event: 'gtm.js'
     });
 
-    var f = d.getElementsByTagName(s)[0],
-        j = d.createElement(s),
-        dl = l != 'dataLayer' ? '&l=' + l : '';
+    const f = d.getElementsByTagName(s)[0];
+    const j = d.createElement(s);
 
     j.async = true;
-    j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+    j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i;
+
+    j.onload = firePageView;
 
     j.onerror = function () {
         console.warn('GTM failed to load');
@@ -33,8 +53,18 @@ window.dataLayer = window.dataLayer || [];
     f.parentNode.insertBefore(j, f);
 
 })(window, document, 'script', 'dataLayer', 'GTM-N2PCMDJZ');
+
+async function sha256(value) {
+    const data = new TextEncoder()
+        .encode(value.trim().toLowerCase());
+
+    const hash = await crypto.subtle.digest('SHA-256', data);
+
+    return [...new Uint8Array(hash)]
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+}
 </script>
-<!-- End Google Tag Manager -->
 
 <style>
 body {
@@ -110,7 +140,6 @@ button:hover {
 
 <body>
 
-<!-- GTM NoScript -->
 <noscript>
 <iframe
     src="https://www.googletagmanager.com/ns.html?id=GTM-N2PCMDJZ"
@@ -119,7 +148,6 @@ button:hover {
     style="display:none;visibility:hidden">
 </iframe>
 </noscript>
-<!-- End GTM NoScript -->
 
 <div class="container" id="form-page">
 
@@ -128,6 +156,11 @@ button:hover {
     <div class="form-container">
 
         <form id="test-form">
+
+            <input
+                type="hidden"
+                id="li_fat_id"
+                name="li_fat_id">
 
             <label>First Name</label>
             <input type="text" id="first_name" required>
@@ -164,76 +197,9 @@ button:hover {
 </div>
 
 <script>
-window.dataLayer = window.dataLayer || [];
+document.getElementById('li_fat_id').value =
+    liFatId || '';
 
-/* Capture LinkedIn Click ID from URL */
-const liFatId =
-    new URLSearchParams(window.location.search)
-        .get('li_fat_id') || null;
-
-/* SHA256 helper for email only */
-async function sha256(value) {
-
-    const normalized =
-        value.trim().toLowerCase();
-
-    const buffer =
-        await crypto.subtle.digest(
-            'SHA-256',
-            new TextEncoder().encode(normalized)
-        );
-
-    return Array.from(new Uint8Array(buffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-}
-
-/* Generate event_id for deduplication */
-function generateEventId() {
-
-    if (crypto.randomUUID) {
-        return crypto.randomUUID();
-    }
-
-    return (
-        Date.now().toString(36) +
-        Math.random().toString(36).slice(2)
-    );
-}
-    /* PAGE VIEW - wait until GTM fully loads */
-function firePageView() {
-
-    const eventPayload = {
-        event: 'page_view',
-        event_id: generateEventId(),
-        page_location: window.location.href,
-        page_path: window.location.pathname,
-        page_title: document.title,
-        li_fat_id: liFatId
-    };
-
-    window.dataLayer.push(eventPayload);
-
-    console.log('Page View fired');
-    console.log(eventPayload);
-    console.log(window.dataLayer);
-}
-
-(function waitForGTMLoad() {
-
-    const gtmLoaded = window.dataLayer.some(
-        item => item.event === 'gtm.load'
-    );
-
-    if (gtmLoaded) {
-        firePageView();
-    } else {
-        setTimeout(waitForGTMLoad, 50);
-    }
-
-})();
-
-/* LEAD FORM */
 document
     .getElementById('test-form')
     .addEventListener('submit', async function (e) {
@@ -268,22 +234,13 @@ document
                     .trim()
                     .toUpperCase();
 
-            /* Only email is hashed */
-            const hashedEmail =
-                await sha256(email);
-
-            const eventPayload = {
-
+            dataLayer.push({
                 event: 'generate_lead',
-
                 event_id: generateEventId(),
-
                 form_name: 'event_registration',
 
                 user_data: {
-
-                    email: hashedEmail,
-
+                    email: await sha256(email),
                     address: {
                         first_name: firstName,
                         last_name: lastName,
@@ -293,16 +250,13 @@ document
 
                 company: company || null,
                 job_title: jobTitle || null,
-
-                li_fat_id: liFatId
-            };
-
-            window.dataLayer.push(eventPayload);
+                li_fat_id: liFatId || null
+            });
 
             console.log('Lead fired');
-            console.log(eventPayload);
-            console.log(window.dataLayer);
-                        document.getElementById('form-page').style.display = 'none';
+            console.log(dataLayer);
+
+            document.getElementById('form-page').style.display = 'none';
 
             const thankYou =
                 document.getElementById('thankyou-page');
@@ -314,11 +268,10 @@ document
 
         } catch (err) {
 
-            console.error(
-                'Form submit error',
-                err
-            );
+            console.error('Form submit error', err);
+
         }
+
     });
 </script>
 
