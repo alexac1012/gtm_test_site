@@ -5,6 +5,9 @@
 <title>CAPI Lead Form</title>
 
 <script>
+/* ---------------------------
+   Initialize dataLayer
+---------------------------- */
 window.dataLayer = window.dataLayer || [];
 
 const liFatId =
@@ -16,6 +19,9 @@ function generateEventId() {
         : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+/* ---------------------------
+   Fire Page View AFTER GTM loads
+---------------------------- */
 function firePageView() {
     dataLayer.push({
         event: 'page_view',
@@ -30,8 +36,11 @@ function firePageView() {
     console.log(dataLayer);
 }
 
+/* ---------------------------
+   Load GTM FIRST
+---------------------------- */
 (function(w,d,s,l,i){
-    w[l]=w[l]||[];
+    w[l] = w[l] || [];
 
     w[l].push({
         'gtm.start': new Date().getTime(),
@@ -44,7 +53,10 @@ function firePageView() {
     j.async = true;
     j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i;
 
-    j.onload = firePageView;
+    // ⭐ Critical: fire page_view ONLY after GTM is fully loaded
+    j.onload = function() {
+        firePageView();
+    };
 
     j.onerror = function () {
         console.warn('GTM failed to load');
@@ -54,6 +66,9 @@ function firePageView() {
 
 })(window, document, 'script', 'dataLayer', 'GTM-N2PCMDJZ');
 
+/* ---------------------------
+   SHA-256 hashing
+---------------------------- */
 async function sha256(value) {
     const data = new TextEncoder()
         .encode(value.trim().toLowerCase());
@@ -197,9 +212,13 @@ button:hover {
 </div>
 
 <script>
+/* Pre-fill hidden li_fat_id */
 document.getElementById('li_fat_id').value =
     liFatId || '';
 
+/* ---------------------------
+   FORM SUBMIT → generate_lead
+---------------------------- */
 document
     .getElementById('test-form')
     .addEventListener('submit', async function (e) {
@@ -234,6 +253,10 @@ document
                     .trim()
                     .toUpperCase();
 
+            /* ---------------------------
+               CLEANED generate_lead payload
+               (consistent, server-friendly)
+            ---------------------------- */
             dataLayer.push({
                 event: 'generate_lead',
                 event_id: generateEventId(),
@@ -241,11 +264,9 @@ document
 
                 user_data: {
                     email: await sha256(email),
-                    address: {
-                        first_name: firstName,
-                        last_name: lastName,
-                        country: country || null
-                    }
+                    first_name: firstName || null,
+                    last_name: lastName || null,
+                    country: country || null
                 },
 
                 company: company || null,
@@ -256,6 +277,7 @@ document
             console.log('Lead fired');
             console.log(dataLayer);
 
+            /* Show thank-you page */
             document.getElementById('form-page').style.display = 'none';
 
             const thankYou =
