@@ -55,8 +55,8 @@ function firePageView() {
 
     // ⭐ Critical: fire page_view ONLY after GTM is fully loaded
     j.onload = function() {
-        firePageView();
-    };
+    window.addEventListener("load", firePageView);
+};
 
     j.onerror = function () {
         console.warn('GTM failed to load');
